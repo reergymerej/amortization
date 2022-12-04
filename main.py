@@ -62,17 +62,38 @@ def add_commas(value: str) -> str:
     joined = ','.join(chunks)
     return joined[::-1]
 
+def align_left(value: str, width: int) -> str:
+    space_needed = width - len(value)
+    space = ' ' * space_needed
+    return f'{value}{space}'
+
+
+def justify(left: str, right: str, width: int) -> str:
+    space_needed = width - len(right) - len(left)
+    space = ' ' * space_needed
+    return f'{left}{space}{right}'
+
+
 def currency(value: float, width: int) -> str:
     with_commas = add_commas(str(int(value)))
-    space_needed = width - len(with_commas) - 1
-    space = ' ' * space_needed
-    return f'${space}{with_commas}'
+    return justify('$', with_commas, width)
 
 def print_col(
     value: float,
     width: int,
 ) -> None:
-    print(f'\t{currency(value, width)}', end='')
+    prefix = '\t'
+    print(f'{prefix}{currency(value, width)}', end='')
+
+
+header_padding = 4
+
+def print_header(columns: List[str]) -> None:
+    for i, c in enumerate(columns):
+        prefix = i != 0 and '\t' or ''
+        print(f'{prefix}{align_left(c, len(c) + header_padding)}', end='')
+    print('')
+
 
 def main():
     annual_interest_rate = 0.07
@@ -83,21 +104,33 @@ def main():
     )
     loan_balance = loan_amount
 
+    columns = [
+        'period',
+        'beginning balance',
+        'total payment',
+        'interest',
+        'principle',
+        'next balance',
+    ]
+    print_header(columns)
+
     for period in range(years * 12):
-        print(f'{period + 1}', end='')
-        print_col(loan_balance, 10)
-        print_col(total_payment, 8)
+        print(f'{align_left(str(period + 1), len(columns[0]) + header_padding)}', end='')
+
+        print_col(loan_balance, len(columns[1]) + header_padding)
+        print_col(total_payment, len(columns[2]) + header_padding)
         interest, principle = get_interest_and_principle_from_payment(
             total_payment,
             loan_balance,
             annual_interest_rate,
         )
-        print_col(interest, 8)
-        print_col(principle, 8)
+        print_col(interest, len(columns[3]) + header_padding)
+        print_col(principle, len(columns[4]) + header_padding)
         next_balance = loan_balance - principle
-        print_col(next_balance, 10)
+        print_col(next_balance, len(columns[5]) + header_padding)
         print('')
         loan_balance = next_balance
+    print_header(columns)
 
 
 if __name__ == '__main__':
